@@ -17,6 +17,7 @@
 
 #define MOTOR_SLOW_SPEED 10
 #define MOTOR_MED_SPEED 15
+#define MOTOR_SANIC_SPEED 40
 
 #define SENSOR_IR_PIN A0
 #define SERVO_IR_PIN 0
@@ -57,6 +58,7 @@ double threshold_distance = 20.0;
 double current_distance = 0;
 byte lines_detected = 0;
 bool can_stop_following = false;
+bool can_start_camera = true;
 
 //Camera
 PixyI2C pixy;
@@ -106,7 +108,7 @@ void setup() {
   pinMode(LINE_C_PIN, INPUT);
   pinMode(LINE_R_PIN, INPUT);
 
-  delay(1000);
+//  delay(1000);
 }
 
 //********************************************************************************************************************
@@ -121,6 +123,12 @@ void loop() {
   }
   else if (current_state & CAMERA_DETECTED) {
     camera_state();
+  }
+  else {
+    motor_left->setVel(MOTOR_MED_SPEED);
+    motor_right->setVel(MOTOR_MED_SPEED);
+    motor_left->setCurrentVel(diffCnt_l);
+    motor_right->setCurrentVel(diffCnt_r);
   }
 
   //update motor's current_velocity
@@ -151,8 +159,8 @@ void loop() {
     current_state |= CAMERA_DETECTED;
 
     //Stop moving
-    motor_left->setVel_basic(0);
-    motor_right->setVel_basic(0);
+    //    motor_left->setVel_basic(0);
+    //    motor_right->setVel_basic(0);
     delay(100);
   }
 
@@ -199,7 +207,7 @@ int search_for_path(int scan_width) {
     }
 
     servo_IR.write(i);
-    delay(40);
+    delay(20);
   }
 
   //Could not find path
@@ -391,45 +399,40 @@ void camera_state(void) {
 
     pixy.setServos(panLoop.m_pos, tiltLoop.m_pos);
 
-    int camera_angle = panLoop.m_pos - PIXY_RCS_CENTER_POS;
-    if (camera_angle > 100) { //camera is right
-      motor_right->setVel(MOTOR_MED_SPEED, 1);
-      motor_left->setVel(MOTOR_MED_SPEED, -1);
-      motor_left->setCurrentVel(diffCnt_l);
-      motor_right->setCurrentVel(diffCnt_r);
-
+    if ((tiltLoop.m_pos - PIXY_RCS_CENTER_POS) > 350) {
       servo_Arm.write(0);
-    }
-    else if (camera_angle < -100) { //camera to left
-      motor_right->setVel(MOTOR_MED_SPEED, -1);
-      motor_left->setVel(MOTOR_MED_SPEED, 1);
-      motor_left->setCurrentVel(diffCnt_l);
-      motor_right->setCurrentVel(diffCnt_r);
-
-      servo_Arm.write(0);
-    }
-    else { //camera centered
-      motor_right->setVel(MOTOR_SLOW_SPEED, -1);
-      motor_left->setVel(MOTOR_MED_SPEED, -1);
-      motor_left->setCurrentVel(diffCnt_l);
-
-      servo_Arm.write(60);
-      motor_right->setCurrentVel(diffCnt_r);
-    }
-
-    if ((tiltLoop.m_pos - PIXY_RCS_CENTER_POS) > 400) {
-      servo_Arm.write(0); 
-
-      while (!(motor_left->setVel(0) & motor_right->setVel(0))) {
-        motor_left->setCurrentVel(diffCnt_l);
-        motor_right->setCurrentVel(diffCnt_r);
-      }
 
       current_state &= ~CAMERA_DETECTED;
-      
+
     }
     else {
       servo_Arm.write(60);
+
+      int camera_angle = panLoop.m_pos - PIXY_RCS_CENTER_POS;
+      if (camera_angle > 100) { //camera is right
+        motor_right->setVel(MOTOR_SANIC_SPEED, 1);
+        motor_left->setVel(MOTOR_SANIC_SPEED, -1);
+        motor_left->setCurrentVel(diffCnt_l);
+        motor_right->setCurrentVel(diffCnt_r);
+
+        servo_Arm.write(0);
+      }
+      else if (camera_angle < -100) { //camera to left
+        motor_right->setVel(MOTOR_SANIC_SPEED, -1);
+        motor_left->setVel(MOTOR_SANIC_SPEED, 1);
+        motor_left->setCurrentVel(diffCnt_l);
+        motor_right->setCurrentVel(diffCnt_r);
+
+        servo_Arm.write(0);
+      }
+      else { //camera centered
+        motor_right->setVel(MOTOR_SANIC_SPEED, -1);
+        motor_left->setVel(MOTOR_SANIC_SPEED, -1);
+        motor_left->setCurrentVel(diffCnt_l);
+
+        servo_Arm.write(60);
+        motor_right->setCurrentVel(diffCnt_r);
+      }
     }
 
   }
