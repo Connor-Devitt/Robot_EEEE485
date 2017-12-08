@@ -51,20 +51,15 @@ double Motor::getVelDelta(double target, double tolerance) {
 }
 
 bool Motor::setVel(double speed, int direction) {
-	// if (speed <= 0) {
-	// 	analogWrite(PWM_PIN, 0);
-	// 	// digitalWrite(ENBL_PIN, LOW);
-	// }
-	// else {
-		// digitalWrite(ENBL_PIN, HIGH);
+	set_vel += getVelDelta(speed);
+	if(set_vel > 255) {
+		set_vel = 255;
+	}
+	else if(set_vel <= 0) {
+		set_vel = 0;
+	}
 
-		set_vel += getVelDelta(speed);
-		if(set_vel > 255) {
-			set_vel = 255;
-		}
-
-		analogWrite(PWM_PIN, set_vel);
-	// }
+	analogWrite(PWM_PIN, set_vel);
 
 	switch(direction) {
 		case 1:
@@ -78,7 +73,7 @@ bool Motor::setVel(double speed, int direction) {
 			break;
 	}
 
-	if(abs((direction * current_vel - speed)) <= 2) {
+	if(abs((direction * current_vel - speed)) <= 1) {
 		return true;
 	}
 	else return false;
@@ -92,7 +87,9 @@ void Motor::setVel_basic(double speed, int direction) {
 		curr_err = 0;
 		delta_err = 0;
 		old_err = 0;
-		
+
+		setCurrentVel(0);
+
 	}
 	else {
 		// digitalWrite(ENBL_PIN, HIGH);
@@ -111,6 +108,7 @@ void Motor::setVel_basic(double speed, int direction) {
 				break;
 		}
 	}
+
 }
 
 void Motor::setCurrentVel(double current_vel) {

@@ -13,7 +13,7 @@ public:
 	void setVel_basic(double speed, int direction = 1);
 	void setCurrentVel(double current_vel);
 	void setPID(double p, double i, double d);
-	
+
 private:
 	int DIR_PIN;
 	int PWM_PIN;
@@ -24,7 +24,7 @@ private:
 	double delta_err;
 	double old_err;
 
-	double pid_p = 2.5;
+	double pid_p = 2;
 	double pid_i  = 0.2;
 	double pid_d = -0.0; //-0.5;
 
